@@ -101,7 +101,11 @@ const runSocketIOSample = function() {
             });
         }
         let $p = createResolutionButtons(stream, subscribeDifferentResolution);
-        conference.subscribe(stream)
+        let options = {
+            audio: stream.source.audio ? true : false,
+            video: stream.source.video ? true : false,
+        }
+        conference.subscribe(stream, options)
         .then((subscription)=>{
             subscirptionLocal = subscription;
             let $video = $(`<video controls autoplay id=${stream.id} style="display:block" >this browser does not supported video tag</video>`);
@@ -150,15 +154,17 @@ const runSocketIOSample = function() {
                      startStreamingIn(myRoom, mediaUrl, serverUrlBase);
                 }
                 if (isPublish !== 'false') {
-                    // audioConstraintsForMic
-                    let audioConstraints = new Owt.Base.AudioTrackConstraints(Owt.Base.AudioSourceInfo.MIC);
-                    // videoConstraintsForCamera
-                    let videoConstraints = new Owt.Base.VideoTrackConstraints(Owt.Base.VideoSourceInfo.CAMERA);
+                    let audioConstraints, videoConstraints;
                     if (shareScreen) {
                         // audioConstraintsForScreen
                         audioConstraints = new Owt.Base.AudioTrackConstraints(Owt.Base.AudioSourceInfo.SCREENCAST);
                         // videoConstraintsForScreen
                         videoConstraints = new Owt.Base.VideoTrackConstraints(Owt.Base.VideoSourceInfo.SCREENCAST);
+                    } else {
+                        // audioConstraintsForMic
+                        audioConstraints = new Owt.Base.AudioTrackConstraints(Owt.Base.AudioSourceInfo.MIC);
+                        // videoConstraintsForCamera
+                        videoConstraints = new Owt.Base.VideoTrackConstraints(Owt.Base.VideoSourceInfo.CAMERA);
                     }
 
                     let mediaStream;
@@ -173,9 +179,16 @@ const runSocketIOSample = function() {
                             ]};
                         }
                         mediaStream = stream;
-                        localStream = new Owt.Base.LocalStream(
-                            mediaStream, new Owt.Base.StreamSourceInfo(
-                                'mic', 'camera'));
+                        if (shareScreen) {
+                            localStream = new Owt.Base.LocalStream(
+                                mediaStream, new Owt.Base.StreamSourceInfo(
+                                    'screen-cast', 'screen-cast'));
+                        } else {
+                            localStream = new Owt.Base.LocalStream(
+                                mediaStream, new Owt.Base.StreamSourceInfo(
+                                    'mic', 'camera'));
+                        }
+                        
                         $('.local video').get(0).srcObject = stream;
                         // Publish with RTCRtpTransceivers.
                         // const transceivers = [];

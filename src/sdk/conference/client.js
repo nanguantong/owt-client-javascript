@@ -289,11 +289,31 @@ export const ConferenceClient = function(config, signalingImpl) {
   }
 
   // eslint-disable-next-line require-jsdoc
+  function transformMediaInfo(streamInfo) {
+    if (!streamInfo.media.tracks) {
+      streamInfo.media.tracks = [];
+      if (streamInfo.media.audio) {
+        var track = streamInfo.media.audio;
+        track.type = 'audio';
+        streamInfo.media.tracks.push(track);
+        delete streamInfo.media.audio;
+      }
+      if (streamInfo.media.video) {
+        var track = streamInfo.media.video;
+        track.type = 'video';
+        streamInfo.media.tracks.push(streamInfo.media.video);
+        delete streamInfo.media.video;
+      }
+    }
+  }
+
+  // eslint-disable-next-line require-jsdoc
   function updateRemoteStream(streamInfo) {
     if (!remoteStreams.has(streamInfo.id)) {
       Logger.warning('Cannot find specific remote stream.');
       return;
     }
+    transformMediaInfo(streamInfo);
     const stream = remoteStreams.get(streamInfo.id);
     stream.settings = StreamUtilsModule.convertToPublicationSettings(streamInfo
         .media);
@@ -306,6 +326,7 @@ export const ConferenceClient = function(config, signalingImpl) {
 
   // eslint-disable-next-line require-jsdoc
   function createRemoteStream(streamInfo) {
+    transformMediaInfo(streamInfo);
     if (streamInfo.type === 'mixed') {
       return new RemoteMixedStream(streamInfo);
     } else {

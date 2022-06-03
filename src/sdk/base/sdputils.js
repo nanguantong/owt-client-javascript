@@ -307,12 +307,12 @@ function maybePreferAudioReceiveCodec(sdp, params) {
   return maybePreferCodec(sdp, 'audio', 'receive', params.audioRecvCodec);
 }
 
-// Promotes |videoSendCodec| to be the first in the m=audio line, if set.
+// Promotes |videoSendCodec| to be the first in the m=video line, if set.
 function maybePreferVideoSendCodec(sdp, params) {
   return maybePreferCodec(sdp, 'video', 'send', params.videoSendCodec);
 }
 
-// Promotes |videoRecvCodec| to be the first in the m=audio line, if set.
+// Promotes |videoRecvCodec| to be the first in the m=video line, if set.
 function maybePreferVideoReceiveCodec(sdp, params) {
   return maybePreferCodec(sdp, 'video', 'receive', params.videoRecvCodec);
 }
@@ -338,13 +338,21 @@ function maybePreferCodec(sdp, type, dir, codec) {
 
   // If the codec is available, set it as the default in m line.
   let payload = null;
-  for (let i = 0; i < sdpLines.length; i++) {
-    const index = findLineInRange(sdpLines, i, -1, 'a=rtpmap', codec);
+  // Iterate through rtpmap enumerations to find all matching codec entries
+  for (let i = sdpLines.length-1; i >= 0 ; --i) {
+    // Finds first match in rtpmap
+    const index = findLineInRange(sdpLines, i, 0, 'a=rtpmap', codec, 'desc');
     if (index !== null) {
+      // Skip all of the entries between i and index match
+      i = index;
       payload = getCodecPayloadTypeFromLine(sdpLines[index]);
       if (payload) {
+        // Move codec to top
         sdpLines[mLineIndex] = setDefaultCodec(sdpLines[mLineIndex], payload);
       }
+    } else {
+      // No match means we can break the loop
+      break;
     }
   }
 
@@ -482,13 +490,31 @@ function findLine(sdpLines, prefix, substr) {
 
 // Find the line in sdpLines[startLine...endLine - 1] that starts with |prefix|
 // and, if specified, contains |substr| (case-insensitive search).
-function findLineInRange(sdpLines, startLine, endLine, prefix, substr) {
-  const realEndLine = endLine !== -1 ? endLine : sdpLines.length;
-  for (let i = startLine; i < realEndLine; ++i) {
-    if (sdpLines[i].indexOf(prefix) === 0) {
-      if (!substr ||
-          sdpLines[i].toLowerCase().indexOf(substr.toLowerCase()) !== -1) {
-        return i;
+function findLineInRange(sdpLines, startLine, endLine, prefix, substr, direction) {
+  if (direction === undefined) {
+    direction = 'asc';
+  }
+  direction = direction || 'asc';
+  if (direction === 'asc') {
+    // Search beginning to end
+    const realEndLine = endLine !== -1 ? endLine : sdpLines.length;
+    for (let i = startLine; i < realEndLine; ++i) {
+      if (sdpLines[i].indexOf(prefix) === 0) {
+        if (!substr ||
+            sdpLines[i].toLowerCase().indexOf(substr.toLowerCase()) !== -1) {
+          return i;
+        }
+      }
+    }
+  } else {
+    // Search end to beginning
+    const realStartLine = startLine !== -1 ? startLine : sdpLines.length-1;
+    for (let j = realStartLine; j >= 0; --j) {
+      if (sdpLines[j].indexOf(prefix) === 0) {
+        if (!substr ||
+            sdpLines[j].toLowerCase().indexOf(substr.toLowerCase()) !== -1) {
+          return j;
+        }
       }
     }
   }
