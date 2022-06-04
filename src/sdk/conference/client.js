@@ -293,15 +293,15 @@ export const ConferenceClient = function(config, signalingImpl) {
     if (!streamInfo.media.tracks) {
       streamInfo.media.tracks = [];
       if (streamInfo.media.audio) {
-        var track = streamInfo.media.audio;
+        let track = streamInfo.media.audio;
         track.type = 'audio';
         streamInfo.media.tracks.push(track);
         delete streamInfo.media.audio;
       }
       if (streamInfo.media.video) {
-        var track = streamInfo.media.video;
+        let track = streamInfo.media.video;
         track.type = 'video';
-        streamInfo.media.tracks.push(streamInfo.media.video);
+        streamInfo.media.tracks.push(track);
         delete streamInfo.media.video;
       }
     }
