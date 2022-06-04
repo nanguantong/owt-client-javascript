@@ -291,15 +291,16 @@ export const ConferenceClient = function(config, signalingImpl) {
   // eslint-disable-next-line require-jsdoc
   function transformMediaInfo(streamInfo) {
     if (!streamInfo.media.tracks) {
+      let track;
       streamInfo.media.tracks = [];
       if (streamInfo.media.audio) {
-        let track = streamInfo.media.audio;
+        track = streamInfo.media.audio;
         track.type = 'audio';
         streamInfo.media.tracks.push(track);
         delete streamInfo.media.audio;
       }
       if (streamInfo.media.video) {
-        let track = streamInfo.media.video;
+        track = streamInfo.media.video;
         track.type = 'video';
         streamInfo.media.tracks.push(track);
         delete streamInfo.media.video;
