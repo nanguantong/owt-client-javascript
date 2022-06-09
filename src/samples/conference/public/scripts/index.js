@@ -180,6 +180,7 @@ const runSocketIOSample = function() {
                         }
                         mediaStream = stream;
                         if (shareScreen) {
+                            publishOption = {audio: false, video:true};
                             localStream = new Owt.Base.LocalStream(
                                 mediaStream, new Owt.Base.StreamSourceInfo(
                                     'screen-cast', 'screen-cast'));
